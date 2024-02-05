@@ -38,7 +38,7 @@ type GinJWTMiddleware struct {
 	// Callback function that should perform the authentication of the user based on userID and
 	// password. Must return true on success, false on failure. Required.
 	// Option return user id, if so, user id will be stored in Claim Array.
-	Authenticator func(code string, c *gin.Context) (int, string, bool, error)
+	Authenticator func(code string, c *gin.Context) (int, string, string, bool, error)
 
 	// Callback function that should perform the authorization of the authenticated user. Called
 	// only after an authentication success. Must return true on success, false on failure.
@@ -251,7 +251,7 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	userID, role, ok, error := mw.Authenticator(loginVals.Code, c)
+	userID, role, email, ok, error := mw.Authenticator(loginVals.Code, c)
 
 	if !ok {
 		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(error, c))
@@ -275,6 +275,7 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 	expire := mw.TimeFunc().Add(mw.Timeout)
 	claims["id"] = userID
 	claims["role"] = role
+	claims["email"] = email
 	claims["exp"] = expire.Unix()
 	claims["orig_iat"] = mw.TimeFunc().Unix()
 
